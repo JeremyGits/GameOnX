@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login to GameOn</title>
+  <style>
+    body { background: black; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial; }
+    .login { text-align: center; }
+    button { background: #333; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+    button:hover { background: #444; }
+  </style>
+</head>
+<body>
+  <div class="login">
+    <h1>Welcome to GameOn</h1>
+    <p>Sign in to continue</p>
+    <button id="login-btn">Login with X</button>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require("electron");
+
+    document.getElementById("login-btn").addEventListener("click", () => {
+      ipcRenderer.send("login-x");
+    });
+
+    // Listen for login success from main (via token refresh or new)
+    ipcRenderer.on("login-success", () => {
+      ipcRenderer.send("load-main"); // Signal main to load lobby
+    });
+  </script>
+</body>
+</html>
