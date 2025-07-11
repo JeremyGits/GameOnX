@@ -18,7 +18,7 @@
     .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
     .room-item { background: #444; padding: 8px; border-radius: 4px; cursor: pointer; text-align: center; position: relative; }
     .room-item:hover { background: #555; }
-    .room-icon { font-size: 2em; } /* e.g., rocket emoji */
+    .room-icon { font-size: 2em; }
     .chat-bubble { position: absolute; top: 5px; right: 5px; background: white; color: black; padding: 2px 5px; border-radius: 10px; font-size: 0.8em; }
     .right-menu { width: 100px; background: #333; padding: 10px; display: flex; flex-direction: column; order: 3; border-left: 1px solid #555; }
     .right-menu button { background: none; border: none; color: white; padding: 5px; cursor: pointer; text-align: left; }
@@ -68,8 +68,8 @@
   </div>
 
   <script>
-    const { electronAPI, socketIo } = window;
-    const socket = socketIo("http://localhost:3000");
+    const { electronAPI } = window;
+    const socket = window.socketIo("http://localhost:3000");
 
     let currentRoomId = null;
     let user = { xId: "demoUserId", username: "DemoUser", profileImageUrl: "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" };

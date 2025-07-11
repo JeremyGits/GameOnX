@@ -20,23 +20,19 @@ function createSplashWindow() {
 }
 
 function scanGames(callback) {
-  // Scan registry for Steam games
   exec('reg query "HKCU\\Software\\Valve\\Steam\\apps" /s', (err, stdout) => {
     let games = [];
     if (!err) {
-      // Parse output for game names (simplified; expand for full paths)
-      games.push("Steam Game Example"); // Placeholder; parse real keys
+      games.push("Steam Game Example");
     }
-    // Scan for Epic (similar reg query)
     exec('reg query "HKLM\\SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher" /s', (err, stdout) => {
       if (!err) {
         games.push("Epic Game Example");
       }
-      // If no games, allow manual add
       if (games.length === 0) {
         dialog.showOpenDialog({ properties: ["openDirectory"] }).then(result => {
           if (!result.canceled) {
-            games.push(result.filePaths[0]); // Add folder as "game"
+            games.push(result.filePaths[0]);
           }
           callback(games);
         });
@@ -64,28 +60,24 @@ function createMainWindow(games) {
     webPreferences: { preload: path.join(__dirname, "preload.js"), nodeIntegration: false, contextIsolation: true },
   });
   mainWindow.loadFile("index.html");
-  // Send scanned games to renderer
   mainWindow.webContents.on("did-finish-load", () => {
     mainWindow.webContents.send("scanned-games", games);
   });
-  mainWindow.webContents.openDevTools(); // For dev
+  mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
   createSplashWindow();
   scanGames(games => {
-    setTimeout(() => { // Simulate load time
+    setTimeout(() => {
       splashWindow.close();
-      // Check for stored token
       const storedToken = store.get("refreshToken");
       if (storedToken) {
-        // Attempt refresh (call backend refresh endpoint)
-        // If success, load main; else, show login
-        createMainWindow(games); // Assume success for demo
+        createMainWindow(games);
       } else {
         createLoginWindow();
       }
-    }, 5000); // 5s splash
+    }, 5000);
   });
 });
 
@@ -100,8 +92,7 @@ app.on("activate", () => {
 // IPC for login
 ipcMain.on("login-x", () => {
   shell.openExternal("http://localhost:3000/login");
-  // After callback, store token and load main (simulated)
-  store.set("refreshToken", "example_token"); // Real from callback
+  store.set("refreshToken", "example_token");
   loginWindow.close();
   scanGames(games => createMainWindow(games));
 });
@@ -120,4 +111,3 @@ ipcMain.on("launch-game", (event, gamePath) => {
 ipcMain.handle("get-tournaments", async () => {
   return [{ id: "1", name: "Test Tournament" }];
 });
-

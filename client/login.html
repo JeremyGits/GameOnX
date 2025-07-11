@@ -5,7 +5,7 @@
   <title>Login to GameOn</title>
   <style>
     body { background: black; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial; }
-    .login { text-align: center; }
+    .login { text-align: center; background: black; padding: 20px; border-radius: 8px; width: 300px; }
     button { background: #333; color: white; padding: 10px 20px; border: none; cursor: pointer; }
     button:hover { background: #444; }
   </style>
@@ -18,15 +18,15 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require("electron");
+    const { electronAPI } = window;
 
     document.getElementById("login-btn").addEventListener("click", () => {
-      ipcRenderer.send("login-x");
-    });
-
-    // Listen for login success from main (via token refresh or new)
-    ipcRenderer.on("login-success", () => {
-      ipcRenderer.send("load-main"); // Signal main to load lobby
+      if (electronAPI && electronAPI.loginX) {
+        electronAPI.loginX();
+      } else {
+        console.error("electronAPI not available");
+        alert("Login unavailable - restart app or check console.");
+      }
     });
   </script>
 </body>
