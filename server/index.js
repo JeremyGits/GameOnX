@@ -1,8 +1,8 @@
 ﻿// server/index.js
+const config = require("./config.js");
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
-const pkceChallenge = require("pkce-challenge");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const socketIo = require("socket.io");
@@ -14,17 +14,13 @@ const io = socketIo(server, {
   cors: { origin: "*" } // Allow from Electron
 });
 
-const PORT = 3000;
-const CLIENT_ID = process.env.X_CLIENT_ID;
-const CLIENT_SECRET = process.env.X_CLIENT_SECRET;
-const REDIRECT_URI = "http://localhost:3000/callback";
-const SESSION_SECRET = process.env.SESSION_SECRET || "your-secret-key"; // Add to .env
+const PORT = config.port;
 
 // Middleware
 app.use(express.json());
 app.use(
   session({
-    secret: SESSION_SECRET,
+    secret: config.sessionSecret,
     resave: false,
     saveUninitialized: true,
     cookie: { maxAge: 60000 * 60 }, // 1 hour
@@ -33,7 +29,7 @@ app.use(
 
 // MongoDB connection with error handling
 mongoose
-  .connect("mongodb://localhost/gaming-client", {
+  .connect(config.mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -57,64 +53,19 @@ const TournamentSchema = new mongoose.Schema({
 });
 const Tournament = mongoose.model("Tournament", TournamentSchema);
 
-// OAuth Login - Generate PKCE and redirect
-app.get("/login", async (req, res) => {
+// Save user (called from Electron after auth)
+app.post("/save-user", async (req, res) => {
+  const { xId, username, refreshToken } = req.body;
   try {
-    const { code_challenge, code_verifier } = await pkceChallenge();
-    req.session.code_verifier = code_verifier;
-    const authUrl = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=users.read%20offline.access&state=state&code_challenge=${code_challenge}&code_challenge_method=S256`;
-    res.redirect(authUrl);
-  } catch (err) {
-    res.status(500).send("Error initiating login");
-  }
-});
-
-// OAuth Callback - Exchange code for token
-app.get("/callback", async (req, res) => {
-  const { code, state } = req.query;
-  if (state !== "state") return res.status(400).send("Invalid state");
-
-  const code_verifier = req.session.code_verifier;
-  if (!code_verifier) return res.status(400).send("Session expired");
-
-  try {
-    const tokenResponse = await axios.post(
-      "https://api.x.com/2/oauth2/token",
-      new URLSearchParams({
-        code,
-        grant_type: "authorization_code",
-        client_id: CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        code_verifier,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")}`,
-        },
-      }
-    );
-
-    const { access_token, refresh_token } = tokenResponse.data;
-
-    // Fetch user info
-    const userResponse = await axios.get("https://api.x.com/2/users/me", {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-    const { id, username } = userResponse.data.data;
-
-    // Save/update user
     await User.findOneAndUpdate(
-      { xId: id },
-      { xId: id, username, refreshToken: refresh_token },
+      { xId },
+      { xId, username, refreshToken },
       { upsert: true }
     );
-
-    // In real app, redirect to custom URI for Electron to handle
-    res.send(`Logged in as ${username}. Close this window and return to the app.`);
+    res.send("User saved");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Authentication failed");
+    res.status(500).send("Error saving user");
   }
 });
 
@@ -127,12 +78,11 @@ app.post("/refresh", async (req, res) => {
       new URLSearchParams({
         refresh_token,
         grant_type: "refresh_token",
-        client_id: CLIENT_ID,
+        client_id: process.env.X_CLIENT_ID,
       }),
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")}`,
         },
       }
     );
