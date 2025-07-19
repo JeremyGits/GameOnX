@@ -1,33 +1,16 @@
-﻿<!DOCTYPE html>
+﻿<!-- login.html (updated with delete button placeholder) -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login to GameOn</title>
-  <style>
-    body { background: black; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial; }
-    .login { text-align: center; background: black; padding: 20px; border-radius: 8px; width: 300px; }
-    button { background: #333; color: white; padding: 10px 20px; border: none; cursor: pointer; }
-    button:hover { background: #444; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login to GameOn</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="login">
-    <h1>Welcome to GameOn</h1>
-    <p>Sign in to continue</p>
-    <button id="login-btn">Login with X</button>
-  </div>
-
-  <script>
-    const { electronAPI } = window;
-
-    document.getElementById("login-btn").addEventListener("click", () => {
-      if (electronAPI && electronAPI.loginX) {
-        electronAPI.loginX();
-      } else {
-        console.error("electronAPI not available");
-        alert("Login unavailable - restart app or check console.");
-      }
-    });
-  </script>
+    <h1>Who's playing?</h1>
+    <ul id="profiles-list"></ul>
+    <button id="add-account">+ Add Account</button>
+    <script src="renderer_login.js"></script>
 </body>
 </html>

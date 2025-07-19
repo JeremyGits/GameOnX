@@ -1,12 +1,13 @@
-﻿// server/index.js
-const config = require("./config.js");
-require("dotenv").config();
+﻿// server/index.js (updated: remove OAuth2 /refresh endpoint, add pfp to UserSchema, remove deprecated Mongoose options)
+
 const express = require("express");
 const axios = require("axios");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const socketIo = require("socket.io");
 const http = require("http");
+const bcrypt = require("bcrypt");
+require("dotenv").config();
 
 const app = express();
 const server = http.createServer(app);
@@ -14,25 +15,25 @@ const io = socketIo(server, {
   cors: { origin: "*" } // Allow from Electron
 });
 
-const PORT = config.port;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 app.use(
   session({
-    secret: config.sessionSecret,
+    secret: process.env.SESSION_SECRET, // Load from .env; generate a strong random string
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 60000 * 60 }, // 1 hour
+    cookie: { 
+      maxAge: 60000 * 60, // 1 hour
+      secure: process.env.NODE_ENV === 'production' // Secure cookie in production (requires HTTPS)
+    },
   })
 );
 
-// MongoDB connection with error handling
+// MongoDB connection
 mongoose
-  .connect(config.mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -40,8 +41,11 @@ mongoose
 const UserSchema = new mongoose.Schema({
   xId: { type: String, unique: true },
   username: String,
+  pfp: String,
   ranking: { type: Number, default: 1000 },
-  refreshToken: String, // Store for long sessions
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Added for friends list
+  localUsername: String,
+  localPassword: String // Hashed
 });
 const User = mongoose.model("User", UserSchema);
 
@@ -53,13 +57,20 @@ const TournamentSchema = new mongoose.Schema({
 });
 const Tournament = mongoose.model("Tournament", TournamentSchema);
 
+// Health endpoint for connection check
+app.get("/health", (req, res) => res.send("OK"));
+
 // Save user (called from Electron after auth)
 app.post("/save-user", async (req, res) => {
-  const { xId, username, refreshToken } = req.body;
+  const { xId, username, pfp, localUsername, localPassword } = req.body;
   try {
+    let hashedPassword;
+    if (localPassword) {
+      hashedPassword = await bcrypt.hash(localPassword, 10);
+    }
     await User.findOneAndUpdate(
       { xId },
-      { xId, username, refreshToken },
+      { username, pfp, localUsername, localPassword: hashedPassword },
       { upsert: true }
     );
     res.send("User saved");
@@ -69,28 +80,17 @@ app.post("/save-user", async (req, res) => {
   }
 });
 
-// Refresh token
-app.post("/refresh", async (req, res) => {
-  const { refresh_token, userId } = req.body;
+// Delete user (new endpoint for client delete)
+app.delete("/user/:xId", async (req, res) => {
   try {
-    const response = await axios.post(
-      "https://api.x.com/2/oauth2/token",
-      new URLSearchParams({
-        refresh_token,
-        grant_type: "refresh_token",
-        client_id: process.env.X_CLIENT_ID,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    );
-    // Update user's refresh token
-    await User.findOneAndUpdate({ xId: userId }, { refreshToken: response.data.refresh_token });
-    res.json(response.data);
+    const result = await User.deleteOne({ xId: req.params.xId });
+    if (result.deletedCount === 0) {
+      return res.status(404).send("User not found");
+    }
+    res.send("User deleted");
   } catch (err) {
-    res.status(500).json({ error: "Refresh failed" });
+    console.error(err);
+    res.status(500).send("Error deleting user");
   }
 });
 
@@ -140,8 +140,38 @@ app.post("/join-tournament", async (req, res) => {
   }
 });
 
+// Friends APIs (new)
+app.get("/friends", async (req, res) => { // Assume userId from query or auth; for prototype, use query param
+  const { userId } = req.query;
+  try {
+    const user = await User.findOne({ xId: userId }).populate("friends", "username"); // Populate friend usernames
+    res.json(user ? user.friends.map(f => ({ username: f.username, online: false })) : []); // Online status placeholder
+  } catch (err) {
+    res.status(500).send("Error fetching friends");
+  }
+});
+
+app.post("/add-friend", async (req, res) => {
+  const { userId, username } = req.body; // userId of requester, username to add
+  try {
+    const user = await User.findOne({ xId: userId });
+    const friend = await User.findOne({ username });
+    if (!user || !friend) return res.status(400).send("User not found");
+    if (!user.friends.includes(friend._id)) {
+      user.friends.push(friend._id);
+      friend.friends.push(user._id); // Mutual add for simplicity
+      await user.save();
+      await friend.save();
+    }
+    res.send("Friend added");
+  } catch (err) {
+    res.status(500).send("Error adding friend");
+  }
+});
+
 // Socket.io for real-time features
 let matchmakingQueue = []; // Simple queue for ranked matches
+let rooms = {}; // In-memory rooms for prototype (id: { name, players: [] })
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -187,8 +217,30 @@ io.on("connection", (socket) => {
     });
   });
 
+  // New: Room creation and updates
+  socket.on("create-room", ({ name }) => {
+    const roomId = `room_${Math.random().toString(36).substring(2)}`; // Simple ID gen
+    rooms[roomId] = { name, players: [socket.id] };
+    socket.join(roomId);
+    io.to(roomId).emit("room-update", { players: rooms[roomId].players });
+  });
+
+  socket.on("join-room", (roomId) => { // Client would emit this; add to client if needed
+    if (rooms[roomId]) {
+      rooms[roomId].players.push(socket.id);
+      socket.join(roomId);
+      io.to(roomId).emit("room-update", { players: rooms[roomId].players });
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+    // Clean up rooms on disconnect
+    for (const roomId in rooms) {
+      rooms[roomId].players = rooms[roomId].players.filter(p => p !== socket.id);
+      if (rooms[roomId].players.length === 0) delete rooms[roomId];
+      else io.to(roomId).emit("room-update", { players: rooms[roomId].players });
+    }
   });
 });
 

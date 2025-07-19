@@ -1,0 +1,29 @@
+<!-- pin.html (new file in client dir for PIN entry) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter X PIN</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Optional, if you have global styles -->
+</head>
+<body>
+    <h2>Enter the PIN from X</h2>
+    <p>After authorizing in the browser, copy the PIN and paste it here to continue.</p>
+    <form id="pin-form">
+        <input type="text" id="pin-input" placeholder="7-digit PIN" required />
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('pin-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const verifier = document.getElementById('pin-input').value.trim();
+                if (verifier) {
+                    window.electronAPI.submitPin(verifier);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

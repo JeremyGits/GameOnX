@@ -1,19 +1,67 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Splash</title>
-  <style>
-    body { background: black; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial; }
-    .loader { text-align: center; }
-    .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameOn - Loading</title>
+    <style>
+        body {
+            margin: 0;
+            background: #121212;
+            color: #ff0000;
+            font-family: Arial;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #loading-message {
+            font-size: 24px;
+        }
+        #connection-light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: red;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
 </head>
 <body>
-  <div class="loader">
-    <div class="spinner"></div>
-    <p>Loading GameOn... Scanning games...</p>
-  </div>
+    <h1>GameOn Loading...</h1>
+    <p id="loading-message">Loading bitmaps...</p>
+    <div id="connection-light"></div>
+
+    <script>
+        const messages = [
+            "Casting Spells...",
+            "Conjuring Spirits...",
+            "Doing nerdy things...",
+            "Laying out main window...",
+            "Ready!"
+        ];
+        let index = 0;
+        const messageElem = document.getElementById("loading-message");
+        const interval = setInterval(() => {
+            index++;
+            if (index < messages.length) {
+                messageElem.textContent = messages[index];
+            } else {
+                clearInterval(interval);
+            }
+        }, 750); // Change every 0.75s
+
+        fetch('http://localhost:3000/health')
+            .then(() => document.getElementById("connection-light").style.background = 'green')
+            .catch(() => document.getElementById("connection-light").style.background = 'red');
+    </script>
 </body>
 </html>

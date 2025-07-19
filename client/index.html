@@ -1,172 +1,47 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameOn Client</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: black; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-    header { background: #333; padding: 5px; text-align: center; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { margin: 0; }
-    header select { background: #444; color: white; border: none; padding: 5px; }
-    .main { display: flex; flex: 1; overflow: hidden; }
-    .sidebar { width: 200px; background: #333; padding: 10px; overflow-y: auto; border-right: 1px solid #555; order: 1; }
-    .user-list { list-style: none; padding: 0; }
-    .user-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9em; }
-    .user-item img { width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; }
-    .content { flex: 1; padding: 10px; overflow-y: auto; order: 2; }
-    .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-    .room-item { background: #444; padding: 8px; border-radius: 4px; cursor: pointer; text-align: center; position: relative; }
-    .room-item:hover { background: #555; }
-    .room-icon { font-size: 2em; }
-    .chat-bubble { position: absolute; top: 5px; right: 5px; background: white; color: black; padding: 2px 5px; border-radius: 10px; font-size: 0.8em; }
-    .right-menu { width: 100px; background: #333; padding: 10px; display: flex; flex-direction: column; order: 3; border-left: 1px solid #555; }
-    .right-menu button { background: none; border: none; color: white; padding: 5px; cursor: pointer; text-align: left; }
-    .right-menu button:hover { background: #444; }
-    .chat { background: #333; padding: 10px; height: 120px; display: flex; flex-direction: column; border-top: 1px solid #555; }
-    #chat-messages { flex: 1; overflow-y: scroll; font-size: 0.9em; }
-    .chat-input { display: flex; margin-top: 5px; }
-    .chat-input input { flex: 1; padding: 5px; background: #222; color: white; border: none; }
-    .chat-input button { padding: 5px 10px; background: #333; color: white; border: none; cursor: pointer; }
-    .chat-input button:hover { background: #444; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameOn - Main Lobby</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>GameOn - Main Lobby</h1>
-    <select id="game-select">
-      <option value="All">All Games</option>
-      <option value="Fortnite">Fortnite</option>
-      <option value="OtherGame">Other Game</option>
-    </select>
-    <button id="login-btn">Login with X</button>
-  </header>
-  <div class="main">
-    <div class="sidebar">
-      <h3>Players</h3>
-      <ul id="user-list" class="user-list"></ul>
-    </div>
-    <div class="content">
-      <h2>GameOn Lobby</h2>
-      <div id="rooms-grid" class="rooms-grid"></div>
-      <button id="create-room-btn">Create Room</button>
-    </div>
-    <div class="right-menu">
-      <button>Home</button>
-      <button>Games</button>
-      <button>Info</button>
-      <button>Help</button>
-      <button>Acct</button>
-    </div>
-  </div>
-  <div class="chat">
-    <div id="chat-messages"></div>
-    <div class="chat-input">
-      <input type="text" id="chat-input" placeholder="Enter chat...">
-      <button id="send-chat">Send</button>
-    </div>
-  </div>
+    <header>
+        <div id="user-info">
+            <img id="user-pfp" src="" alt="Profile" style="width:50px; height:50px; border-radius:50%; margin-right:10px;">
+            Welcome, <span id="username">Guest</span>
+        </div>
+        <h1>All Games</h1>
+        <ul id="games-list">
+            <li>Fortnite</li>
+            <li>Other Game</li>
+        </ul>
+        <!-- Removed Login with X button -->
+    </header>
+    <aside>
+        <h2>Players</h2>
+        <ul id="players-list"></ul>
+        <button id="friends-button">Friends</button> <!-- New button to load friends -->
+    </aside>
+    <main>
+        <h1>GameOn Lobby</h1>
+        <button id="create-room">Create Room</button> <!-- Hook for rooms -->
+    </main>
+    <footer>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Games</a>
+            <a href="#">Info</a>
+            <a href="#">Help</a>
+            <a href="#">Acct</a>
+        </nav>
+    </footer>
+    <section id="chat-section">
+        <input type="text" placeholder="Type message...">
+        <button>Send</button>
+    </section>
 
-  <script>
-    const { electronAPI } = window;
-    const socket = window.socketIo("http://localhost:3000");
-
-    let currentRoomId = null;
-    let user = { xId: "demoUserId", username: "DemoUser", profileImageUrl: "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" };
-    let usersOnline = []; // Fetch or simulate
-
-    // Login and fetch user with PFP
-    document.getElementById("login-btn").addEventListener("click", () => {
-      electronAPI.loginX();
-      fetch(`http://localhost:3000/user/${user.xId}`).then(res => res.json()).then(data => {
-        user = data;
-        updateUserList();
-      });
-    });
-
-    // Update user list
-    function updateUserList() {
-      const userList = document.getElementById("user-list");
-      userList.innerHTML = "";
-      [user, ...usersOnline].forEach(u => {
-        userList.innerHTML += `<li class="user-item"><img src="${u.profileImageUrl}" alt="PFP"><span>${u.username}</span></li>`;
-      });
-    }
-
-    // Load rooms (filtered by game; default "All")
-    function loadRooms(game = "All") {
-      let url = "http://localhost:3000/rooms";
-      if (game !== "All") url += `?game=${game}`;
-      fetch(url).then(res => res.json()).then(rooms => {
-        const grid = document.getElementById("rooms-grid");
-        grid.innerHTML = "";
-        rooms.forEach(room => {
-          grid.innerHTML += `<div class="room-item" data-id="${room._id}">
-            <div class="room-icon">${room.icon || '🚀'}</div>
-            ${room.name} (${room.type})<br>${room.currentPlayers.length}/${room.maxPlayers}
-            <div class="chat-bubble">Chat</div>
-          </div>`;
-        });
-        document.querySelectorAll(".room-item").forEach(item => {
-          item.addEventListener("click", () => joinRoom(item.dataset.id));
-        });
-      });
-    }
-
-    // Game select change
-    document.getElementById("game-select").addEventListener("change", (e) => loadRooms(e.target.value));
-
-    // Create room
-    document.getElementById("create-room-btn").addEventListener("click", () => {
-      const name = prompt("Room Name:");
-      const type = prompt("Type (e.g., 1v1 Fun):");
-      const icon = prompt("Icon (emoji, e.g., 🚀):");
-      const game = document.getElementById("game-select").value === "All" ? prompt("Game Name:") : document.getElementById("game-select").value;
-      fetch("http://localhost:3000/create-room", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, game, type, maxPlayers: 4, icon }),
-      }).then(() => loadRooms());
-    });
-
-    // Join room
-    function joinRoom(roomId) {
-      fetch("http://localhost:3000/join-room", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.xId, roomId }),
-      }).then(() => {
-        socket.emit("join-room", roomId);
-        currentRoomId = roomId;
-        loadRooms();
-      });
-    }
-
-    // Chat
-    document.getElementById("send-chat").addEventListener("click", () => {
-      const msg = document.getElementById("chat-input").value;
-      if (msg && currentRoomId) {
-        socket.emit("chat", { msg, roomId: currentRoomId, username: user.username });
-        document.getElementById("chat-input").value = "";
-      }
-    });
-    socket.on("chat", (data) => {
-      document.getElementById("chat-messages").innerHTML += `<p><strong>${data.username}:</strong> ${data.msg}</p>`;
-      document.getElementById("chat-messages").scrollTop = document.getElementById("chat-messages").scrollHeight;
-    });
-
-    // Get online users via Socket.io
-    socket.on("connect", () => {
-      socket.emit("get-online-users");
-    });
-    socket.on("online-users", (users) => {
-      usersOnline = users;
-      updateUserList();
-    });
-
-    // Initial load
-    loadRooms();
-    updateUserList();
-  </script>
+    <script src="renderer.js"></script>
 </body>
 </html>

@@ -12,7 +12,8 @@
     "mongoose": "^8.0.1",
     "express-session": "^1.17.3",
     "socket.io": "^4.7.2",
-    "http": "0.0.1-security"
+    "http": "0.0.1-security",
+    "bcrypt": "^5.1.1"
   },
   "main": "index.js"
 }
