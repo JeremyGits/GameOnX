@@ -1,0 +1,63 @@
+2025-07-16T05:04:44.823Z - User saved to DB
+2025-07-16T10:16:18.066Z - Creating splash window
+2025-07-16T10:16:18.231Z - Splash HTML loaded
+2025-07-16T10:16:21.138Z - createLoginWindow called
+2025-07-16T10:16:21.186Z - Splash window closed
+2025-07-16T10:16:21.361Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T10:16:21.363Z - login.html loaded
+2025-07-16T10:16:26.930Z - scanGames started
+2025-07-16T10:16:26.931Z - Executing Steam registry query
+2025-07-16T10:16:26.950Z - loginWindow closed
+2025-07-16T21:09:56.889Z - Creating splash window
+2025-07-16T21:09:57.046Z - Splash HTML loaded
+2025-07-16T21:09:59.956Z - createLoginWindow called
+2025-07-16T21:09:59.985Z - Splash window closed
+2025-07-16T21:10:00.168Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T21:10:00.170Z - login.html loaded
+2025-07-16T21:10:03.461Z - scanGames started
+2025-07-16T21:10:03.478Z - Executing Steam registry query
+2025-07-16T21:10:03.496Z - loginWindow closed
+2025-07-16T21:19:30.674Z - Splash window created
+2025-07-16T21:19:33.677Z - createLoginWindow called
+2025-07-16T21:19:33.886Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T21:19:33.888Z - login.html loaded
+2025-07-16T21:19:35.116Z - scanGames started
+2025-07-16T21:19:35.136Z - loginWindow closed
+2025-07-16T21:24:37.880Z - Splash window created
+2025-07-16T21:24:40.883Z - createLoginWindow called
+2025-07-16T21:24:41.089Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T21:24:41.091Z - login.html loaded
+2025-07-16T21:24:42.098Z - scanGames started - synchronous mode
+2025-07-16T21:24:42.164Z - Steam game added
+2025-07-16T21:24:42.191Z - Epic game added
+2025-07-16T21:24:42.194Z - scanGames completed with games: ["Steam Game Example","Epic Game Example"]
+2025-07-16T21:24:42.205Z - loginWindow closed
+2025-07-16T21:24:44.837Z - Splash window created
+2025-07-16T21:24:47.854Z - createLoginWindow called
+2025-07-16T21:24:48.059Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T21:24:48.062Z - login.html loaded
+2025-07-16T21:25:55.934Z - loginWindow closed
+2025-07-16T21:26:25.134Z - Creating splash window
+2025-07-16T21:26:25.295Z - Splash HTML loaded
+2025-07-16T21:26:28.199Z - createLoginWindow called
+2025-07-16T21:26:28.229Z - Splash window closed
+2025-07-16T21:26:28.400Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T21:26:28.402Z - login.html loaded
+2025-07-16T21:26:35.246Z - loginWindow closed
+2025-07-16T22:43:56.640Z - Splash window created
+2025-07-16T22:43:59.645Z - createLoginWindow called
+2025-07-16T22:43:59.851Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T22:43:59.853Z - login.html loaded
+2025-07-16T22:44:06.889Z - scanGames started - sync mode
+2025-07-16T22:44:06.975Z - Steam game added
+2025-07-16T22:44:07.003Z - Epic game added
+2025-07-16T22:44:07.005Z - scanGames completed with games: ["Steam Game Example","Epic Game Example"]
+2025-07-16T22:44:07.008Z - createMainWindow called with games: ["Steam Game Example","Epic Game Example"]
+2025-07-16T22:44:07.050Z - loginWindow closed
+2025-07-16T22:44:07.233Z - mainWindow did-finish-load, scanned-games sent
+2025-07-16T22:44:07.236Z - index.html loaded
+2025-07-16T23:18:18.229Z - Splash window created
+2025-07-16T23:18:21.235Z - createLoginWindow called
+2025-07-16T23:18:21.447Z - loginWindow did-finish-load, user-profiles sent
+2025-07-16T23:18:21.449Z - login.html loaded
+2025-07-16T23:18:30.785Z - loginWindow closed

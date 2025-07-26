@@ -1,0 +1,36 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "pkce-challenge": "^3.1.0",
+    "socket.io-client": "^4.8.1",
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.1",
+    "electron-builder": "^26.0.12"
+  },
+  "main": "System/main.js",
+  "build": {
+    "appId": "com.gameon.app",
+    "win": {
+      "target": "nsis"
+    },
+    "protocols": [
+      {
+        "name": "GameOn Protocol",
+        "schemes": ["gameon"]
+      }
+    ]
+  }
+}
